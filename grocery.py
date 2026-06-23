@@ -45,50 +45,23 @@ def main():
     # Business Question
     # How many transactions does the top product pairing have?
 
-#     print(
-#         con.sql(
-#             f"""
-#             WITH
-#             -- Expand each non-canceled booking into one row per night occupied 
-#             nights AS (
-#                 SELECT
-#                     unnest(
-#                         range(checkin_date::DATE, checkout_date::DATE, INTERVAL '1 day')
-#                     )::DATE AS night_date
-#                 FROM {TABLE_NAME}
-#                 WHERE is_canceled = 0
-#             ),
-#             -- Count rooms occupied per night
-#             daily_occupancy AS (
-#                 SELECT
-#                     night_date,
-#                     COUNT(*) AS rooms_occupied
-#                 FROM nights
-#                 GROUP BY night_date
-#             ),
-#             -- Sum booked room-nights per calendar month
-#             monthly_stats AS (
-#                 SELECT
-#                     DATE_TRUNC('month', night_date)::DATE AS month_start,
-#                     SUM(rooms_occupied) AS booked_room_nights
-#                 FROM daily_occupancy
-#                 GROUP BY DATE_TRUNC('month', night_date)
-#             )
-#             SELECT
-#                 month_start,
-#                 booked_room_nights,
-#                 200 * DATEDIFF('day', month_start, month_start + INTERVAL '1 month')
-#                     AS available_room_nights,
-#                 FLOOR(
-#                     booked_room_nights * 100.0
-#                     / (200 * DATEDIFF('day', month_start, month_start + INTERVAL '1 month'))
-#                 )::INTEGER AS occupancy_rate_pct
-#             FROM monthly_stats
-#             WHERE YEAR(month_start) = 2016
-#             ORDER BY month_start;
-# """
-#         )
-#     )
+    print(
+        con.sql(
+            f"""
+                SELECT
+                    a.product_name AS product_1,
+                    b.product_name AS product_2,
+                    COUNT(DISTINCT a.transaction_id) AS transaction_count
+                FROM {TABLE_NAME} a
+                JOIN {TABLE_NAME} b
+                    ON  a.transaction_id = b.transaction_id
+                    AND a.upc < b.upc
+                GROUP BY a.product_name, b.product_name
+                ORDER BY transaction_count DESC
+                LIMIT 1;
+            """
+        )
+    )
 
 if __name__ == '__main__':
     main()
